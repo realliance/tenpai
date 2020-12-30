@@ -6,10 +6,12 @@
 #include <iterator>
 #include <iostream>
 #include <thread>
+#include <chrono>
 
 #include "bots/viewer.h"
 
 #include "support/matchkeeper.h"
+#include "support/matchpool.h"
 #include "controllermanager.h"
 #include "settings.h"
 #include "statefunctions.h"
@@ -21,7 +23,8 @@ using Mahjong::GetController,
       Mahjong::GameSettings,
       Mahjong::StartGame;
 using GametableSDK::Network::connectToMatch;
-using Support::MatchKeeper;
+using Support::MatchKeeper,
+      Support::MatchPool;
 
 auto Action::connectToNetworkGame(std::string url, std::string botName) -> void {
   auto selectedBot = GetController(botName);
@@ -29,7 +32,7 @@ auto Action::connectToNetworkGame(std::string url, std::string botName) -> void 
   connectToMatch(*bot, url);
 }
 
-auto Action::startLocalGame(uint32_t matches, std::string botA, std::string botB, std::string botC, std::string botD) -> void {
+auto Action::startLocalGame(uint32_t matches, uint32_t threads, std::string botA, std::string botB, std::string botC, std::string botD) -> void {
   std::vector<std::string> botList = {botA, botB, botC, botD};
 
   auto createViewer = [&botList]() -> PlayerController* { return new Viewer(GetController(botList[0]), botList); };
@@ -38,9 +41,20 @@ auto Action::startLocalGame(uint32_t matches, std::string botA, std::string botB
     return;
   }
 
+  MatchKeeper::getInstance().ConfigureMatchNum(matches);
+
+  MatchPool pool(threads);
+
   for (uint32_t i = 0; i < matches; i++) {
-    StartGame({{ "Viewer", botB, botC, botD }}, false);
+    pool.addJob([&botB, &botC, &botD]() { StartGame({{ "Viewer", botB, botC, botD }}, false); });
   }
+
+  while (pool.jobsRemaining()) {
+    MatchKeeper::getInstance().PrintProgress();
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+  }
+  pool.shutdown();
+  MatchKeeper::getInstance().PrintProgress();
 
   std::ostringstream oss;
 
@@ -49,7 +63,7 @@ auto Action::startLocalGame(uint32_t matches, std::string botA, std::string botB
 
   uint8_t o = 0;
   for (const auto& score : MatchKeeper::getInstance().winner) {
-    oss << botList[o] << " Wins: " << std::to_string(score) << std::endl;
+    oss << "Player " << o + 1 << " (" << botList[o] << ") Wins: " << std::to_string(score) << std::endl;
     o++;
   }
 

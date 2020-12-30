@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <any>
+#include <thread>
 
 using namespace Support;
 
@@ -33,6 +34,7 @@ auto ClientMenu::localPlay(std::any& param) -> void {
   std::string botC = Input::getbotselection("Select Bot #3");
   std::string botD = Input::getbotselection("Select Bot #4");
   uint32_t matches = Input::getnum<uint32_t>("Number of Matches", 1, 4294967294);
+  uint32_t threads = Input::getnum<uint32_t>("Number of Threads", 1, std::thread::hardware_concurrency());
   
-  startLocalGame(matches, botA, botB, botC, botD);
+  startLocalGame(matches, threads, botA, botB, botC, botD);
 }

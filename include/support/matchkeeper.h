@@ -5,6 +5,7 @@
 #include <vector>
 #include <random>
 #include <map>
+#include <mutex>
 #include "playercontroller.h"
 
 namespace Support {
@@ -22,10 +23,15 @@ namespace Support {
         return instance;
       }
 
+      std::mutex scoreMutex;
       std::vector<gameScores> matchScores;
       std::vector<uint8_t> winner;
+      uint32_t currentMatches;
+      uint32_t totalMatches;
 
+      auto ConfigureMatchNum(uint32_t m) -> void { currentMatches = 0; totalMatches = m; }
       auto RecordScores(gameScores scores) -> void;
+      auto PrintProgress() -> void;
 
 
       MatchKeeper(MatchKeeper const&) = delete;

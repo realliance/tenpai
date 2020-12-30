@@ -8,4 +8,5 @@ target_sources(${PROJECT_NAME}
   "${DIR}/action.h"
   "${DIR}/bots/viewer.h"
   "${DIR}/support/matchkeeper.h"
+  "${DIR}/support/matchpool.h"
 )

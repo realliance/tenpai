@@ -9,4 +9,5 @@ target_sources(${PROJECT_NAME}
   "${DIR}/action.cpp"
   "${DIR}/bots/viewer.cpp"
   "${DIR}/support/matchkeeper.cpp"
+  "${DIR}/support/matchpool.cpp"
 )
